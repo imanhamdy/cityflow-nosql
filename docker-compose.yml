@@ -57,6 +57,23 @@ services:
     networks:
       - cityflow-net
 
+  redis-seed:
+    image: redis:7-alpine
+    container_name: cityflow-redis-seed
+    restart: "no"
+    volumes:
+      - ./seed/redis/init.sh:/init.sh:ro
+    command: sh /init.sh
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-cityflow2025}
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - cityflow-net
+
   redis-commander:
     image: rediscommander/redis-commander:latest
     container_name: cityflow-redis-commander

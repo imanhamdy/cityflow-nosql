@@ -7,9 +7,17 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+      - ./seed/mongodb/init.js:/docker-entrypoint-initdb.d/init.js:ro
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: cityflow2025
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-cityflow2025}
+      MONGO_INITDB_DATABASE: ${MONGO_DB:-cityflow}
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')", "--quiet"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - cityflow-net
 
@@ -20,18 +28,54 @@ services:
     ports:
       - "8081:8081"
     environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
-      ME_CONFIG_MONGODB_ADMINPASSWORD: cityflow2025
-      ME_CONFIG_MONGODB_URL: mongodb://admin:cityflow2025@mongodb:27017/
-      ME_CONFIG_BASICAUTH_USERNAME: student
-      ME_CONFIG_BASICAUTH_PASSWORD: nosql2025
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_ROOT_USERNAME:-admin}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ROOT_PASSWORD:-cityflow2025}
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-cityflow2025}@mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USER:-student}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD:-nosql2025}
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
+    networks:
+      - cityflow-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: cityflow-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --requirepass ${REDIS_PASSWORD:-cityflow2025} --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-cityflow2025}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - cityflow-net
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: cityflow-redis-commander
+    restart: unless-stopped
+    ports:
+      - "8082:8081"
+    environment:
+      REDIS_HOSTS: local:redis:6379:0:${REDIS_PASSWORD:-cityflow2025}
+      HTTP_USER: ${REDIS_COMMANDER_USER:-student}
+      HTTP_PASSWORD: ${REDIS_COMMANDER_PASSWORD:-nosql2025}
+    depends_on:
+      redis:
+        condition: service_healthy
     networks:
       - cityflow-net
 
 volumes:
   mongo_data:
+  redis_data:
 
 networks:
   cityflow-net:

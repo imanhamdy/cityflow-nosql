@@ -257,3 +257,15 @@ durées sur le chemin, filtre sur le temps total.
 
 > Les user stories M2, M4, R4, C2 et N4 sont documentées avec requêtes complètes dans
 > les fichiers `queries/`.
+
+---
+
+## Origine des données
+
+Les données du projet sont fictives et générées pour les besoins du TP.
+
+- Les noms d'utilisateurs, trajets et véhicules sont inventés.
+- Les noms de stations sont ceux du vrai réseau TCL de Lyon (Bellecour, Perrache, Part-Dieu...) mais les disponibilités, événements et horodatages sont fabriqués.
+- Les lignes de métro A/B/C/D s'inspirent du réseau lyonnais réel, avec des durées approximées.
+
+"J'ai généré des données fictives représentatives d'un vrai réseau de mobilité lyonnais, en m'inspirant de la géographie réelle de Lyon pour rendre le jeu de données cohérent et démontrable."

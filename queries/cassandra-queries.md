@@ -72,6 +72,8 @@ WHERE station_id = 'S001'
 AND day = '2025-09-17';
 ```
 
+**Concept démontré :** Cette requête démontre le modèle query-first de Cassandra. La Partition Key composée `(station_id, day)` garantit que tous les événements d'une station pour un jour donné sont co-localisés sur le même noeud, rendant la lecture en O(1) sans scan global. Le Clustering Order `event_time DESC` rend les événements les plus récents accessibles en tête de partition sans tri supplémentaire.
+
 ---
 
 ## US-C2 - Enregistrer plusieurs milliers d'événements par minute
@@ -124,6 +126,8 @@ WHERE station_id = 'S001'
 AND day = '2025-09-22';
 ```
 
+**Concept démontré :** Cette requête démontre les écritures append-only de Cassandra. Chaque insertion est indépendante, sans verrou ni transaction distribuée. Le `BEGIN BATCH` ici garantit que les deux vues (`station_passages` et `user_connexions`) recoivent le même `event_id`, ce qui est acceptable en seed ; en production les insertions seraient pilotées par la couche applicative en parallèle sur chaque table.
+
 ---
 
 ## US-C3 - Connexions d'un utilisateur sur 30 jours
@@ -144,6 +148,8 @@ AND event_time <= '2025-09-30 23:59:59+0000';
 ```
 
 Cette requête est efficace car elle cible une seule partition : `(user_id, month)`.
+
+**Concept démontré :** Cette requête démontre la dénormalisation intentionnelle de Cassandra. Le même événement est stocké à la fois dans `station_passages` (vu par la station) et dans `user_connexions` (vu par l'utilisateur). Cette duplication est le prix à payer pour obtenir deux lectures en O(1) sans join - chaque partition est optimisée pour un seul pattern d'accès.
 
 ---
 
@@ -169,6 +175,8 @@ FROM daily_station_stats
 WHERE station_id = 'S001'
 AND day = '2025-09-15';
 ```
+
+**Concept démontré :** Cette requête démontre l'usage des colonnes COUNTER de Cassandra. Les statistiques sont calculées à l'écriture (chaque événement incrémente les compteurs) et non à la lecture - évitant ainsi un `COUNT(*) GROUP BY day` sur des millions de lignes. C'est un exemple de CQRS (Command Query Responsibility Segregation) appliqué au niveau de la base de données.
 
 ---
 

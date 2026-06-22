@@ -128,15 +128,27 @@ Requête utilisateur « Planifier un trajet »
 
 Pour ce projet, chaque base est interrogée indépendamment via ses propres scripts et requêtes.
 
-## 4. Choix de ne pas utiliser un SGBD relationnel
+## 4. Pourquoi ne pas utiliser une seule base relationnelle ?
 
-Une base SQL unique (PostgreSQL) aurait pu stocker toutes ces données, mais au prix de :
-- **Schémas rigides** pour les trajets (difficile d'imbriquer des étapes GPS sans JSONB).
-- **Performances dégradées** pour les time-series (pas d'optimisation native des partitions
-  par date).
-- **Absence de primitives graphe** (le plus court chemin en SQL = procédures stockées
-  complexes ou extension PostGIS/pgRouting).
-- **Latence incompatible** avec les besoins temps réel (sessions, disponibilités).
+Une base relationnelle pourrait stocker l'ensemble des données CityFlow, mais cela
+introduirait plusieurs limites :
 
-Le surcoût opérationnel (4 bases à maintenir) est justifié par les gains fonctionnels et de
-performance pour chaque domaine.
+- Les données de trajets et profils nécessitent une forte flexibilité de schéma.
+- Les disponibilités temps réel et sessions exigent une latence très faible.
+- Les historiques de passages génèrent un très grand volume d'écritures.
+- Les calculs d'itinéraires sont naturellement représentés sous forme de graphe.
+
+L'approche polyglotte permet donc d'utiliser la technologie la plus adaptée à chaque
+besoin métier au prix d'une complexité opérationnelle plus élevée.
+
+## 5. Limites de l'architecture polyglotte
+
+Cette architecture présente plusieurs avantages mais aussi des contraintes :
+
+- Déploiement plus complexe.
+- Multiplication des compétences techniques nécessaires.
+- Sauvegardes réparties sur plusieurs systèmes.
+- Cohérence des données plus difficile à garantir.
+
+Nous avons accepté ces compromis car chaque base apporte un avantage significatif pour
+son cas d'usage.

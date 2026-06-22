@@ -45,6 +45,8 @@ RETURN [n IN nodes(path) | n.name] AS chemin_optimal,
        weight                       AS duree_totale_min;
 ```
 
+**Concept démontré :** Cette requête démontre l'algorithme `shortestPath` natif de Neo4j, qui traverse le graphe de transport sans mapper de tables ou d'index. En SQL, le même calcul nécessiterait une requête récursive (`WITH RECURSIVE`) ou une procédure stockée. La version bonus avec `apoc.algo.dijkstra` optimise sur la propriété `duration_min` des relations plutôt que sur le simple nombre de sauts.
+
 ---
 
 ## US-N2 : Stations accessibles en moins de 15 minutes
@@ -72,6 +74,8 @@ Saxe-Gambetta        6
 ...
 ```
 
+**Concept démontré :** Cette requête démontre le pattern de chemin variable-length `*1..6` de Cypher, qui explore tous les chemins jusqu'à 6 sauts. La fonction `reduce()` accumule les durées sur chaque relation visitée. Le `DISTINCT` avec `min(duree)` garantit qu'on retient le chemin le plus court vers chaque station, même si plusieurs chemins y mènent.
+
 ---
 
 ## US-N3 : Stations les plus connectées (hubs)
@@ -94,6 +98,8 @@ Charpennes       3
 Perrache         3
 Saxe-Gambetta    3
 ```
+
+**Concept démontré :** Cette requête démontre la mesure de centralité dans un graphe (degré sortant). En SQL, compter les relations nécessiterait une auto-jointure ou une sous-requête. En Cypher, `count(voisin)` sur des relations `:CONNECTED_TO` existantes est une opération native - les relations sont des citoyens de première classe du modèle, pas des lignes dans une table de jointure.
 
 ---
 
@@ -137,6 +143,8 @@ RETURN
 resultat
 Aucun trajet direct disponible
 ```
+
+**Concept démontré :** Cette requête démontre l'`OPTIONAL MATCH` de Cypher, qui retourne `null` si le pattern n'existe pas plutôt que de supprimer la ligne (équivalent d'un `LEFT JOIN` en SQL). Le `CASE WHEN l IS NULL` permet de retourner un message métier lisible. La requête exprime naturellement "existe-t-il une ligne qui dessert les deux stations ?" en une seule traversée de graphe.
 
 ---
 

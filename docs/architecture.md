@@ -41,7 +41,7 @@ structure. Quatre bases NoSQL cohabitent, orchestrées par Docker Compose.
 ```
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'fontSize': '18px', 'nodeSpacing': 60, 'rankSpacing': 80}}}%%
+%%{init: {'theme': 'default', 'themeVariables': {'fontSize': '18px', 'nodeSpacing': 60, 'rankSpacing': 80}}}%%
 graph TD
     App[CityFlow App / Services applicatifs] --> MongoDB[(MongoDB)]
     App --> Redis[(Redis)]

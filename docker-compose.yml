@@ -99,8 +99,8 @@ services:
     volumes:
       - cassandra_data:/var/lib/cassandra
     environment:
-      CASSANDRA_CLUSTER_NAME: "CityFlow"
-      CASSANDRA_DC: "dc1"
+      CASSANDRA_CLUSTER_NAME: ${CASSANDRA_CLUSTER_NAME:-CityFlow}
+      CASSANDRA_DC: ${CASSANDRA_DC:-dc1}
       CASSANDRA_ENDPOINT_SNITCH: "GossipingPropertyFileSnitch"
       MAX_HEAP_SIZE: "512M"
       HEAP_NEWSIZE: "128M"

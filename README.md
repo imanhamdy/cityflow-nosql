@@ -27,6 +27,7 @@ Toutes les bases sont peuplées automatiquement au premier démarrage.
 |-----------|-----|--------------|
 | Mongo Express (MongoDB) | http://localhost:8081 | student / nosql2025 |
 | Redis Commander | http://localhost:8082 | student / nosql2025 |
+| Cassandra Web | http://localhost:8083 | — |
 | Neo4j Browser | http://localhost:7474 | neo4j / cityflow2025 |
 
 ### Connexion directe aux bases
@@ -85,6 +86,19 @@ cityflow-nosql/
 
 ---
 
+## Données de seed
+
+Chaque base est peuplée automatiquement au démarrage :
+
+| Base | Volume |
+|------|--------|
+| MongoDB | ~20 utilisateurs, ~20 véhicules, ~30 trajets avec commentaires |
+| Redis | Disponibilités de 10 stations, 5 sessions, 1 leaderboard, compteurs de rate limiting |
+| Cassandra | 200 événements horodatés sur 7 jours, 3 tables (passages, connexions, stats COUNTER) |
+| Neo4j | 15 stations lyonnaises, 4 lignes (A/B/C/D), 34 relations `:CONNECTED_TO`, 27 dessertes `:SERVES` |
+
+---
+
 ## Documentation de modélisation
 
 - [Modélisation MongoDB](docs/modelisation-mongodb.md) — collections users / trips / vehicles, embed vs. référence, index
@@ -115,3 +129,17 @@ cityflow-nosql/
 | US-N2 | Stations accessibles à moins de 15 minutes | Neo4j |
 | US-N3 | Identification des stations hubs | Neo4j |
 | US-N4 | Itinéraire sans correspondance | Neo4j |
+
+---
+
+## Pourquoi pas un seul SGBD relationnel ?
+
+Une base SQL unique aurait pu tout stocker, mais au prix de :
+
+- **Schémas rigides** pour les trajets multi-étapes imbriqués (sans JSONB natif)
+- **Performances dégradées** pour les time-series (pas de partition par date native)
+- **Absence de primitives graphe** (le plus court chemin en SQL = procédures stockées)
+- **Latence incompatible** avec les besoins temps réel des disponibilités de stations
+
+Le surcoût opérationnel des 4 bases est justifié par les gains fonctionnels et de performance.
+Voir [docs/architecture.md](docs/architecture.md) pour la justification détaillée.

@@ -199,6 +199,18 @@ APPLY BATCH;
 
 Cela permet de corréler les deux vues si besoin.
 
+> **Note sur l'usage de BEGIN BATCH dans le seed**
+>
+> Dans le script de seed, `BEGIN BATCH` est utilisé uniquement pour initialiser plusieurs tables
+> cohérentes à partir des mêmes événements. Cela garantit que chaque événement apparait dans
+> `station_passages` et `user_connexions` avec le même `event_id`, ce qui est pratique pour
+> une démonstration.
+>
+> En production, on éviterait les batches massifs dans Cassandra, car le modèle repose sur
+> des écritures rapides et distribuées. Les écritures seraient pilotées par la couche applicative
+> selon les tables nécessaires aux requêtes, sans passer par des batches coordonnés qui
+> augmentent la charge sur les coordinateurs de cluster.
+
 ## 11. User stories couvertes
 
 | User story | Description | Table |

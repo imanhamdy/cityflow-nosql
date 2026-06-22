@@ -23,6 +23,34 @@ structure. Quatre bases NoSQL cohabitent, orchestrées par Docker Compose.
   └──────────┘   └──────────┘   └─────────────┘   └──────────────┘
 ```
 
+```mermaid
+graph TD
+    App[CityFlow App / Services applicatifs] --> MongoDB[(MongoDB)]
+    App --> Redis[(Redis)]
+    App --> Cassandra[(Cassandra)]
+    App --> Neo4j[(Neo4j)]
+
+    MongoDB --> M1[Profils utilisateurs]
+    MongoDB --> M2[Trajets effectués]
+    MongoDB --> M3[Véhicules disponibles]
+
+    Redis --> R1[Disponibilités temps réel]
+    Redis --> R2[Sessions avec TTL]
+    Redis --> R3[Leaderboard]
+    Redis --> R4[Rate limiting]
+
+    Cassandra --> C1[Historique des passages]
+    Cassandra --> C2[Logs de connexion]
+    Cassandra --> C3[Séries temporelles]
+
+    Neo4j --> N1[Stations]
+    Neo4j --> N2[Lignes]
+    Neo4j --> N3[Connexions]
+    Neo4j --> N4[Calculs d'itinéraires]
+```
+
+Chaque base est spécialisée pour un besoin précis. MongoDB stocke les données métier riches, Redis gère le temps réel et les données éphémères, Cassandra absorbe les écritures massives horodatées, et Neo4j modélise naturellement le réseau de transport sous forme de graphe.
+
 ## 2. Répartition des responsabilités
 
 ### MongoDB - Données métier riches et flexibles

@@ -6,6 +6,44 @@ CityFlow est une plateforme fictive de mobilité urbaine multimodale pour la mé
 
 ---
 
+## Schema global
+
+```
+                       ARCHITECTURE CITYFLOW - VUE D'ENSEMBLE
+               ─────────────────────────────────────────────────────
+
+  Acteurs :
+  Utilisateur · Administrateur · Analyste · Developpeur · Planificateur · Systeme
+                                          |
+                            ┌─────────────┴──────────────┐
+                            │      APPLICATION CITYFLOW    │
+                            │  Planification · Reservation │
+                            │    Suivi · Multimodal Lyon   │
+                            └──┬──────────┬───────────┬───┘
+                               |          |           |    \
+               ┌───────────────┘    ┌─────┘     ┌────┘     └────────────────┐
+               |                    |            |                           |
+       ┌───────┴────────┐  ┌────────┴────┐  ┌───┴─────────┐  ┌─────────────┴──┐
+       │    MONGODB     │  │    REDIS    │  │  CASSANDRA  │  │     NEO4J      │
+       │    :27017      │  │    :6379    │  │    :9042    │  │  :7687 / :7474 │
+       ├────────────────┤  ├─────────────┤  ├─────────────┤  ├────────────────┤
+       │ users          │  │ station:    │  │ station_    │  │ (:Station)     │
+       │ trips          │  │  avail.     │  │   passages  │  │ (:Line)        │
+       │ vehicles       │  │ session:    │  │ user_       │  │ [:CONNECTED_TO]│
+       │                │  │  token      │  │  connexions │  │ [:SERVES]      │
+       │                │  │ leaderboard │  │ daily_stats │  │                │
+       │                │  │ ratelimit   │  │             │  │                │
+       ├────────────────┤  ├─────────────┤  ├─────────────┤  ├────────────────┤
+       │ Schema flexible│  │  < 1 ms     │  │  Ecritures  │  │ shortestPath   │
+       │ Embed + Aggreg.│  │  TTL natif  │  │  massives   │  │ Traversees     │
+       │ Full-text index│  │  Rate limit │  │  Partitions │  │ Graphe Lyon    │
+       ├────────────────┤  ├─────────────┤  ├─────────────┤  ├────────────────┤
+       │  M1 M2 M3 M4   │  │ R1 R2 R3 R4 │  │ C1 C2 C3 C4 │  │  N1 N2 N3 N4  │
+       └────────────────┘  └─────────────┘  └─────────────┘  └────────────────┘
+```
+
+---
+
 ## Auteur
 
 **Iman Hamdy** - Ynov Campus Lyon, B3 INFO 2025/2026
@@ -99,13 +137,14 @@ Chaque base est peuplée automatiquement au démarrage :
 
 ---
 
-## Documentation de modélisation
+## Documentation et démonstration
 
-- [Modélisation MongoDB](docs/modelisation-mongodb.md) - collections users / trips / vehicles, embed vs. référence, index
+- [Guide de démo](DEMO.md) - lancement pas à pas + une requête par base, copy-pasteable
+- [Architecture globale](docs/architecture.md) - schéma Mermaid, justifications polyglotte
+- [Modélisation MongoDB](docs/modelisation-mongodb.md) - collections, embed vs. référence, index
 - [Modélisation Redis](docs/modelisation-redis.md) - clés, structures, naming convention
 - [Modélisation Cassandra](docs/modelisation-cassandra.md) - tables, partition keys, clustering columns
 - [Modélisation Neo4j](docs/modelisation-neo4j.md) - nœuds, relations, propriétés
-- [Architecture globale](docs/architecture.md) - vue d'ensemble et justification des choix polyglotte
 
 ---
 

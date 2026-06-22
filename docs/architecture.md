@@ -1,4 +1,4 @@
-# Architecture CityFlow — Persistance Polyglotte
+﻿# Architecture CityFlow - Persistance Polyglotte
 
 ## 1. Vue d'ensemble
 
@@ -9,7 +9,7 @@ structure. Quatre bases NoSQL cohabitent, orchestrées par Docker Compose.
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                      Application CityFlow                       │
-│                   (couche applicative — hors périmètre)         │
+│                   (couche applicative - hors périmètre)         │
 └───────┬───────────────┬──────────────────┬──────────────────────┘
         │               │                  │                  │
         ▼               ▼                  ▼                  ▼
@@ -25,7 +25,7 @@ structure. Quatre bases NoSQL cohabitent, orchestrées par Docker Compose.
 
 ## 2. Répartition des responsabilités
 
-### MongoDB — Données métier riches et flexibles
+### MongoDB - Données métier riches et flexibles
 
 **Ce qu'on stocke :** profils utilisateurs, historique des trajets, catalogue des véhicules.
 
@@ -42,7 +42,7 @@ structure. Quatre bases NoSQL cohabitent, orchestrées par Docker Compose.
 - Séries temporelles à haut débit d'écriture → Cassandra
 - Traversées de graphe → Neo4j
 
-### Redis — Temps réel et performances
+### Redis - Temps réel et performances
 
 **Ce qu'on stocke :** disponibilités de stations (STRING), sessions utilisateurs (HASH + TTL),
 classement mensuel (SORTED SET), compteurs de rate limiting (STRING + TTL).
@@ -58,7 +58,7 @@ classement mensuel (SORTED SET), compteurs de rate limiting (STRING + TTL).
 - Persistance durée de vie longue → MongoDB ou Cassandra
 - Requêtes ad-hoc sur des données structurées → MongoDB
 
-### Cassandra — Historique massif et time-series
+### Cassandra - Historique massif et time-series
 
 **Ce qu'on stocke :** événements de passage aux stations (`station_passages`), connexions
 utilisateurs par mois (`user_connexions`), statistiques journalières agrégées
@@ -76,7 +76,7 @@ utilisateurs par mois (`user_connexions`), statistiques journalières agrégées
 - Jointures ou requêtes ad-hoc → MongoDB
 - Traversées relationnelles → Neo4j
 
-### Neo4j — Réseau et itinéraires
+### Neo4j - Réseau et itinéraires
 
 **Ce qu'on stocke :** nœuds `:Station` (15 stations lyonnaises), nœuds `:Line` (4 lignes),
 relations `:CONNECTED_TO` (durée en minutes), relations `:SERVES` (ordre sur la ligne).

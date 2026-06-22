@@ -1,6 +1,6 @@
-# CityFlow — Plateforme de mobilité urbaine polyglotte
+﻿# CityFlow - Plateforme de mobilité urbaine polyglotte
 
-Projet fil rouge du module **NoSQL B3** — Ynov Campus Lyon 2025/2026.
+Projet fil rouge du module **NoSQL B3** - Ynov Campus Lyon 2025/2026.
 
 CityFlow est une plateforme fictive de mobilité urbaine multimodale pour la métropole de Lyon (covoiturage, transports en commun, vélos en libre-service). Ce dépôt contient l'architecture de persistance polyglotte : MongoDB, Redis, Cassandra et Neo4j, orchestrés via Docker Compose.
 
@@ -8,7 +8,7 @@ CityFlow est une plateforme fictive de mobilité urbaine multimodale pour la mé
 
 ## Auteur
 
-**Iman Hamdy** — Ynov Campus Lyon, B3 INFO 2025/2026
+**Iman Hamdy** - Ynov Campus Lyon, B3 INFO 2025/2026
 
 ---
 
@@ -27,7 +27,7 @@ Toutes les bases sont peuplées automatiquement au premier démarrage.
 |-----------|-----|--------------|
 | Mongo Express (MongoDB) | http://localhost:8081 | student / nosql2025 |
 | Redis Commander | http://localhost:8082 | student / nosql2025 |
-| Cassandra Web | http://localhost:8083 | — |
+| Cassandra Web | http://localhost:8083 | - |
 | Neo4j Browser | http://localhost:7474 | neo4j / cityflow2025 |
 
 ### Connexion directe aux bases
@@ -49,7 +49,7 @@ docker exec -it cityflow-cassandra cqlsh -u cassandra -p cassandra
 
 ---
 
-## Architecture — répartition des données
+## Architecture - répartition des données
 
 | Base | Données stockées | Justification |
 |------|-----------------|---------------|
@@ -101,11 +101,11 @@ Chaque base est peuplée automatiquement au démarrage :
 
 ## Documentation de modélisation
 
-- [Modélisation MongoDB](docs/modelisation-mongodb.md) — collections users / trips / vehicles, embed vs. référence, index
-- [Modélisation Redis](docs/modelisation-redis.md) — clés, structures, naming convention
-- [Modélisation Cassandra](docs/modelisation-cassandra.md) — tables, partition keys, clustering columns
-- [Modélisation Neo4j](docs/modelisation-neo4j.md) — nœuds, relations, propriétés
-- [Architecture globale](docs/architecture.md) — vue d'ensemble et justification des choix polyglotte
+- [Modélisation MongoDB](docs/modelisation-mongodb.md) - collections users / trips / vehicles, embed vs. référence, index
+- [Modélisation Redis](docs/modelisation-redis.md) - clés, structures, naming convention
+- [Modélisation Cassandra](docs/modelisation-cassandra.md) - tables, partition keys, clustering columns
+- [Modélisation Neo4j](docs/modelisation-neo4j.md) - nœuds, relations, propriétés
+- [Architecture globale](docs/architecture.md) - vue d'ensemble et justification des choix polyglotte
 
 ---
 

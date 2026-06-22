@@ -1,4 +1,4 @@
-# Requêtes MongoDB — CityFlow
+﻿# Requêtes MongoDB - CityFlow
 
 Connexion au shell :
 ```bash
@@ -8,11 +8,11 @@ use cityflow
 
 ---
 
-## US-M1 — Profil utilisateur + 10 derniers trajets
+## US-M1 - Profil utilisateur + 10 derniers trajets
 
 > En tant qu'utilisateur, je veux pouvoir consulter mon profil et l'historique de mes 10 derniers trajets.
 
-### Requête 1a — Profil utilisateur
+### Requête 1a - Profil utilisateur
 
 ```js
 db.users.findOne(
@@ -35,7 +35,7 @@ db.users.findOne(
 }
 ```
 
-### Requête 1b — 10 derniers trajets
+### Requête 1b - 10 derniers trajets
 
 ```js
 db.trips.find(
@@ -60,7 +60,7 @@ db.trips.find(
 
 ---
 
-## US-M2 — Véhicules d'un type dans un arrondissement
+## US-M2 - Véhicules d'un type dans un arrondissement
 
 > En tant qu'administrateur, je veux lister tous les véhicules d'un type donné disponibles dans un arrondissement.
 
@@ -81,7 +81,7 @@ db.vehicles.find(
 ]
 ```
 
-### Variante — tous les scooters disponibles (tous arrondissements)
+### Variante - tous les scooters disponibles (tous arrondissements)
 
 ```js
 db.vehicles.find(
@@ -101,15 +101,15 @@ db.vehicles.find(
 ]
 ```
 
-**Concept illustré :** Filtre multi-champs sur un index composé `{ type, district, status }`. MongoDB utilise l'index pour ne scanner que les documents correspondants — équivalent d'un `WHERE type = ? AND district = ? AND status = ?` optimisé.
+**Concept illustré :** Filtre multi-champs sur un index composé `{ type, district, status }`. MongoDB utilise l'index pour ne scanner que les documents correspondants - équivalent d'un `WHERE type = ? AND district = ? AND status = ?` optimisé.
 
 ---
 
-## US-M3 — Statistiques agrégées
+## US-M3 - Statistiques agrégées
 
 > En tant qu'analyste, je veux obtenir : nombre de trajets par jour, distance moyenne, top 5 conducteurs.
 
-### Requête 3a — Nombre de trajets par jour
+### Requête 3a - Nombre de trajets par jour
 
 ```js
 db.trips.aggregate([
@@ -138,7 +138,7 @@ db.trips.aggregate([
 ]
 ```
 
-### Requête 3b — Distance moyenne de tous les trajets
+### Requête 3b - Distance moyenne de tous les trajets
 
 ```js
 db.trips.aggregate([
@@ -163,7 +163,7 @@ db.trips.aggregate([
 ]
 ```
 
-### Requête 3c — Top 5 conducteurs
+### Requête 3c - Top 5 conducteurs
 
 ```js
 db.trips.aggregate([
@@ -208,7 +208,7 @@ db.trips.aggregate([
 
 ---
 
-## US-M4 — Recherche full-text sur les commentaires
+## US-M4 - Recherche full-text sur les commentaires
 
 > En tant que développeur, je veux effectuer une recherche full-text sur les commentaires laissés après les trajets.
 
@@ -217,7 +217,7 @@ L'index texte est créé dans le seed :
 db.trips.createIndex({ comment: "text" })
 ```
 
-### Requête — Recherche du mot "vélo"
+### Requête - Recherche du mot "vélo"
 
 ```js
 db.trips.find(
@@ -239,7 +239,7 @@ db.trips.find(
 ]
 ```
 
-### Requête — Recherche multi-mots (OU logique)
+### Requête - Recherche multi-mots (OU logique)
 
 ```js
 db.trips.find(

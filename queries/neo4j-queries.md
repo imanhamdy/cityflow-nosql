@@ -1,4 +1,4 @@
-# Requêtes Neo4j - CityFlow
+﻿# Requêtes Neo4j - CityFlow
 
 ## Connexion
 
@@ -33,7 +33,7 @@ chemin                                                                       nb_
 ["Perrache","Bellecour","Foch","Brotteaux","Charpennes","Laurent Bonnevay"]  5
 ```
 
-### Bonus — Chemin le moins long en temps (avec APOC)
+### Bonus - Chemin le moins long en temps (avec APOC)
 
 > APOC doit être activé : `NEO4J_PLUGINS: '["apoc"]'` dans docker-compose.yml.
 

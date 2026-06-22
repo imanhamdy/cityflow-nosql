@@ -1,4 +1,4 @@
-# Modélisation Neo4j - CityFlow
+﻿# Modélisation Neo4j - CityFlow
 
 ## 1. Rôle de Neo4j dans CityFlow
 
@@ -76,27 +76,27 @@ CREATE (l)-[:SERVES {order: 1}]->(s);
 
 ## 5. Réseau modélisé
 
-### Ligne A (rouge) — 9 stations
+### Ligne A (rouge) - 9 stations
 
 ```
 Perrache → Ampère → Bellecour → Cordeliers → Hôtel de Ville
 → Foch → Saxe-Gambetta → Charpennes → Laurent Bonnevay
 ```
 
-### Ligne B (bleu) — 8 stations
+### Ligne B (bleu) - 8 stations
 
 ```
 Gerland → Jean Macé → Perrache → Bellecour
 → Foch → Brotteaux → Charpennes → Laurent Bonnevay
 ```
 
-### Ligne C (orange) — 3 stations
+### Ligne C (orange) - 3 stations
 
 ```
 Hôtel de Ville → Croix-Paquet → Cuire
 ```
 
-### Ligne D (vert) — 7 stations
+### Ligne D (vert) - 7 stations
 
 ```
 Vieux-Lyon → Bellecour → Cordeliers → Hôtel de Ville

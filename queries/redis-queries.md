@@ -1,4 +1,4 @@
-# Requêtes Redis — CityFlow
+﻿# Requêtes Redis - CityFlow
 
 Connexion au shell :
 ```bash
@@ -7,11 +7,11 @@ docker exec -it cityflow-redis redis-cli --no-auth-warning -a cityflow2025
 
 ---
 
-## US-R1 — Disponibilité en temps réel d'une station
+## US-R1 - Disponibilité en temps réel d'une station
 
 > En tant qu'utilisateur, je veux voir en temps réel combien de vélos sont disponibles à la station X.
 
-### Cas 1 — Cache hit (clé présente)
+### Cas 1 - Cache hit (clé présente)
 
 ```bash
 # Lire toutes les disponibilités de la station Bellecour
@@ -46,7 +46,7 @@ TTL station:S001:availability
 
 **Résultat attendu :** `247` *(valeur décroissante)*
 
-### Cas 2 — Cache miss (clé expirée ou inconnue)
+### Cas 2 - Cache miss (clé expirée ou inconnue)
 
 ```bash
 TTL station:S099:availability
@@ -77,21 +77,21 @@ EXPIRE station:S001:availability 300
 
 ---
 
-## US-R2 — Session utilisateur avec expiration glissante de 30 minutes
+## US-R2 - Session utilisateur avec expiration glissante de 30 minutes
 
 > En tant qu'utilisateur, je veux que ma session reste active pendant 30 minutes après ma dernière action.
 
 ### Séquence complète à chaque requête HTTP
 
 ```bash
-# Étape 1 — Vérifier que la session existe (token reçu dans le header HTTP)
+# Étape 1 - Vérifier que la session existe (token reçu dans le header HTTP)
 EXISTS session:tok_u001_a1b2c3d4
 ```
 
 **Résultat attendu :** `1` (existe) ou `0` (expirée → rediriger vers login)
 
 ```bash
-# Étape 2 — Si elle existe, lire les données utilisateur
+# Étape 2 - Si elle existe, lire les données utilisateur
 HGETALL session:tok_u001_a1b2c3d4
 ```
 
@@ -114,7 +114,7 @@ HGETALL session:tok_u001_a1b2c3d4
 ```
 
 ```bash
-# Étape 3 — Renouveler le TTL (sliding expiration : 30 min depuis MAINTENANT)
+# Étape 3 - Renouveler le TTL (sliding expiration : 30 min depuis MAINTENANT)
 EXPIRE session:tok_u001_a1b2c3d4 1800
 ```
 
@@ -146,11 +146,11 @@ DEL session:tok_u001_a1b2c3d4
 
 ---
 
-## US-R3 — Classement des 10 utilisateurs les plus actifs du mois
+## US-R3 - Classement des 10 utilisateurs les plus actifs du mois
 
 > En tant qu'utilisateur, je veux consulter le classement des 10 utilisateurs les plus actifs du mois.
 
-### Requête principale — Top 10 avec scores
+### Requête principale - Top 10 avec scores
 
 ```bash
 ZREVRANGE leaderboard:monthly:2025-06 0 9 WITHSCORES
@@ -203,25 +203,25 @@ ZCARD leaderboard:monthly:2025-06
 
 **Résultat attendu :** `20`
 
-**Concept illustré :** Le Sorted Set maintient l'ordre automatiquement à chaque `ZINCRBY`. Récupérer le top 10 est une opération O(log N + 10) quelle que soit la taille du classement. En base relationnelle, chaque lecture du leaderboard nécessite un `COUNT(*) GROUP BY userId ORDER BY` sur la table de trajets — potentiellement des millions de lignes à agréger pour un résultat affiché en temps réel.
+**Concept illustré :** Le Sorted Set maintient l'ordre automatiquement à chaque `ZINCRBY`. Récupérer le top 10 est une opération O(log N + 10) quelle que soit la taille du classement. En base relationnelle, chaque lecture du leaderboard nécessite un `COUNT(*) GROUP BY userId ORDER BY` sur la table de trajets - potentiellement des millions de lignes à agréger pour un résultat affiché en temps réel.
 
 ---
 
-## US-R4 — Rate limiting à 100 requêtes par minute
+## US-R4 - Rate limiting à 100 requêtes par minute
 
 > En tant que système, je veux limiter chaque utilisateur à 100 requêtes API par minute.
 
 ### Séquence à chaque requête API reçue
 
 ```bash
-# Étape 1 — Incrémenter le compteur atomiquement
+# Étape 1 - Incrémenter le compteur atomiquement
 INCR ratelimit:user:u009
 ```
 
 **Résultat attendu :** `94` *(valeur après incrément)*
 
 ```bash
-# Étape 2 — Si c'est le premier incrément (valeur = 1), fixer le TTL
+# Étape 2 - Si c'est le premier incrément (valeur = 1), fixer le TTL
 # (TTL = -1 signifie "pas de TTL", donc première requête de la minute)
 TTL ratelimit:user:u009
 ```
@@ -234,7 +234,7 @@ TTL ratelimit:user:u009
 ```
 
 ```bash
-# Étape 3 — Vérifier le seuil
+# Étape 3 - Vérifier le seuil
 GET ratelimit:user:u009
 ```
 
@@ -278,4 +278,4 @@ EXPIRE ratelimit:user:u009 60
 EXEC
 ```
 
-**Concept illustré :** `INCR` est une opération atomique dans Redis — même si 1000 requêtes arrivent simultanément pour le même utilisateur, chaque `INCR` est sérialisé correctement. Le TTL de 60s expire automatiquement la clé, remettant le compteur à zéro pour la minute suivante sans aucun job de nettoyage.
+**Concept illustré :** `INCR` est une opération atomique dans Redis - même si 1000 requêtes arrivent simultanément pour le même utilisateur, chaque `INCR` est sérialisé correctement. Le TTL de 60s expire automatiquement la clé, remettant le compteur à zéro pour la minute suivante sans aucun job de nettoyage.

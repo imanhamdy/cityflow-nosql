@@ -1,5 +1,5 @@
-#!/bin/sh
-# CityFlow — Redis seed data
+﻿#!/bin/sh
+# CityFlow - Redis seed data
 # Lancé automatiquement par le service redis-seed dans docker-compose.
 # Manuellement : docker exec -i cityflow-redis sh < seed/redis/init.sh
 
@@ -65,7 +65,7 @@ $R EXPIRE station:S016:availability 300
 echo "  OK 16 stations chargees (TTL 300s)"
 
 # ─── 2. SESSIONS UTILISATEURS (5 sessions actives) ───────────────────────────
-# Structure : Hash  |  TTL : 1800s (30 min, sliding — renouvelé à chaque action HTTP)
+# Structure : Hash  |  TTL : 1800s (30 min, sliding - renouvelé à chaque action HTTP)
 
 $R HSET session:tok_u001_a1b2c3d4 userId u001 firstName Alice lastName Martin email alice.martin@cityflow.fr role passenger createdAt 2025-06-21T08:30:00Z lastAction 2025-06-21T09:00:00Z
 $R EXPIRE session:tok_u001_a1b2c3d4 1800

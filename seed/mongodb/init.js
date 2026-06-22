@@ -1,4 +1,4 @@
-// CityFlow — MongoDB seed data
+﻿// CityFlow - MongoDB seed data
 // Runs automatically on first `docker compose up` via /docker-entrypoint-initdb.d/
 
 db = db.getSiblingDB('cityflow');
@@ -313,21 +313,21 @@ db.trips.insertMany([
 
 // ─── INDEXES ──────────────────────────────────────────────────────────────────
 
-// US-M1 — last trips per user
+// US-M1 - last trips per user
 db.trips.createIndex({ userId: 1, date: -1 });
 
-// US-M2 — vehicles by type + district
+// US-M2 - vehicles by type + district
 db.vehicles.createIndex({ type: 1, district: 1, status: 1 });
 
-// US-M3 — aggregation on date and driverId
+// US-M3 - aggregation on date and driverId
 db.trips.createIndex({ date: 1 });
 db.trips.createIndex({ driverId: 1 });
 
-// US-M4 — full-text search on comments
+// US-M4 - full-text search on comments
 db.trips.createIndex({ comment: "text" });
 
 // User lookup
 db.users.createIndex({ userId: 1 }, { unique: true });
 db.vehicles.createIndex({ vehicleId: 1 }, { unique: true });
 
-print("✓ CityFlow MongoDB seed complete — users:20, vehicles:20, trips:30");
+print("✓ CityFlow MongoDB seed complete - users:20, vehicles:20, trips:30");

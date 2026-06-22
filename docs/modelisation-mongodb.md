@@ -1,18 +1,18 @@
-# Modélisation MongoDB — CityFlow
+﻿# Modélisation MongoDB - CityFlow
 
 ## Pourquoi MongoDB pour ces données ?
 
 MongoDB est choisi pour les **données métier riches** : profils utilisateurs, trajets multimodaux et véhicules disponibles. Ces données ont trois propriétés qui font de MongoDB le choix naturel :
 
-1. **Schémas flexibles et évolutifs** — un trajet contient un nombre variable d'étapes (1 à n modes de transport), une voiture a des propriétés différentes d'un vélo (plaque, places, etc.). MongoDB gère nativement cette variabilité sans ALTER TABLE.
-2. **Documents imbriqués** — les étapes d'un trajet sont toujours lues avec le trajet lui-même. L'embedding évite les jointures coûteuses.
-3. **Requêtes ad-hoc** — les analystes interrogent les données selon des critères variés (par jour, par arrondissement, par type de véhicule). MongoDB excelle pour ces requêtes exploratoires.
+1. **Schémas flexibles et évolutifs** - un trajet contient un nombre variable d'étapes (1 à n modes de transport), une voiture a des propriétés différentes d'un vélo (plaque, places, etc.). MongoDB gère nativement cette variabilité sans ALTER TABLE.
+2. **Documents imbriqués** - les étapes d'un trajet sont toujours lues avec le trajet lui-même. L'embedding évite les jointures coûteuses.
+3. **Requêtes ad-hoc** - les analystes interrogent les données selon des critères variés (par jour, par arrondissement, par type de véhicule). MongoDB excelle pour ces requêtes exploratoires.
 
 ---
 
 ## Collections
 
-### `users` — Profils utilisateurs
+### `users` - Profils utilisateurs
 
 ```json
 {
@@ -32,12 +32,12 @@ MongoDB est choisi pour les **données métier riches** : profils utilisateurs, 
 ```
 
 **Choix de modélisation :**
-- `preferences` est **embeddé** — c'est une donnée intrinsèque à l'utilisateur, toujours lue en même temps que son profil, et ne dépassera jamais quelques champs.
+- `preferences` est **embeddé** - c'est une donnée intrinsèque à l'utilisateur, toujours lue en même temps que son profil, et ne dépassera jamais quelques champs.
 - `userId` est un identifiant métier lisible (ex. `"u001"`) en plus de l'`_id` ObjectId, pour faciliter les références croisées dans les autres collections.
 
 ---
 
-### `vehicles` — Véhicules disponibles
+### `vehicles` - Véhicules disponibles
 
 ```json
 {
@@ -54,13 +54,13 @@ MongoDB est choisi pour les **données métier riches** : profils utilisateurs, 
 ```
 
 **Choix de modélisation :**
-- Collection indépendante (pas embeddée dans `users`) — un véhicule existe indépendamment de tout trajet, est partagé entre plusieurs utilisateurs, et est interrogé seul (US-M2 : liste par type + arrondissement).
-- `district` et `station` sont des strings plutôt que des références — les arrondissements/stations ne changent pas, il n'y a pas de collection `stations` à maintenir en cohérence (c'est Neo4j qui gère le graphe des stations).
+- Collection indépendante (pas embeddée dans `users`) - un véhicule existe indépendamment de tout trajet, est partagé entre plusieurs utilisateurs, et est interrogé seul (US-M2 : liste par type + arrondissement).
+- `district` et `station` sont des strings plutôt que des références - les arrondissements/stations ne changent pas, il n'y a pas de collection `stations` à maintenir en cohérence (c'est Neo4j qui gère le graphe des stations).
 - Pas de `lastUserId` : la gestion des réservations temps réel est confiée à Redis, pas MongoDB.
 
 ---
 
-### `trips` — Trajets effectués
+### `trips` - Trajets effectués
 
 ```json
 {

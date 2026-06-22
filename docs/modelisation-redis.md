@@ -1,14 +1,14 @@
-# Modélisation Redis — CityFlow
+﻿# Modélisation Redis - CityFlow
 
 ## Pourquoi Redis pour ces données ?
 
 Redis est choisi pour les données **temps réel et performance** de CityFlow pour trois raisons fondamentales :
 
-1. **Latence sub-milliseconde** — la disponibilité des stations doit s'afficher en moins de 10 ms. Une requête MongoDB prendrait 20-50 ms, inacceptable pour une carte en temps réel mise à jour toutes les secondes.
-2. **Expiration automatique (TTL)** — les disponibilités de stations, les sessions et les compteurs de rate limiting ont naturellement une durée de vie limitée. Redis gère cela nativement avec `EXPIRE`, sans job de nettoyage à écrire ni colonne `expires_at` à maintenir.
-3. **Structures spécialisées** — un Sorted Set est la structure parfaite pour un classement : `ZREVRANGE` renvoie le top 10 en O(log N + K). En SQL, cela nécessiterait `SELECT userId, COUNT(*) ... ORDER BY ... LIMIT 10` avec un scan de table à chaque appel.
+1. **Latence sub-milliseconde** - la disponibilité des stations doit s'afficher en moins de 10 ms. Une requête MongoDB prendrait 20-50 ms, inacceptable pour une carte en temps réel mise à jour toutes les secondes.
+2. **Expiration automatique (TTL)** - les disponibilités de stations, les sessions et les compteurs de rate limiting ont naturellement une durée de vie limitée. Redis gère cela nativement avec `EXPIRE`, sans job de nettoyage à écrire ni colonne `expires_at` à maintenir.
+3. **Structures spécialisées** - un Sorted Set est la structure parfaite pour un classement : `ZREVRANGE` renvoie le top 10 en O(log N + K). En SQL, cela nécessiterait `SELECT userId, COUNT(*) ... ORDER BY ... LIMIT 10` avec un scan de table à chaque appel.
 
-**Coût d'une approche SQL :** gérer le rate limiting avec une table `api_calls(userId, minute, count)` exige des transactions et des locks pour éviter les race conditions sur `UPDATE`. Redis gère l'atomicité de `INCR` nativement — pas de lock nécessaire.
+**Coût d'une approche SQL :** gérer le rate limiting avec une table `api_calls(userId, minute, count)` exige des transactions et des locks pour éviter les race conditions sur `UPDATE`. Redis gère l'atomicité de `INCR` nativement - pas de lock nécessaire.
 
 ---
 
@@ -40,7 +40,7 @@ Pattern général : `{domaine}:{entite}:{identifiant}[:{attribut}]`
 
 ## Détail par structure
 
-### Hash — `station:{id}:availability`
+### Hash - `station:{id}:availability`
 
 Champs stockés :
 ```
@@ -57,7 +57,7 @@ capacity    20
 
 ---
 
-### Hash — `session:{token}`
+### Hash - `session:{token}`
 
 Champs stockés :
 ```
@@ -74,7 +74,7 @@ lastAction   "2025-06-21T09:00:00Z"
 
 ---
 
-### Sorted Set — `leaderboard:monthly:{YYYY-MM}`
+### Sorted Set - `leaderboard:monthly:{YYYY-MM}`
 
 Membres : `userId` (ex. `u001`, `u003`)
 Score : nombre de trajets du mois
@@ -85,7 +85,7 @@ Score : nombre de trajets du mois
 
 ---
 
-### String — `ratelimit:user:{userId}`
+### String - `ratelimit:user:{userId}`
 
 Valeur : entier (nombre de requêtes dans la minute courante)
 TTL : 60s (expire naturellement à la fin de la minute, la clé repart à 0)
@@ -94,7 +94,7 @@ TTL : 60s (expire naturellement à la fin de la minute, la clé repart à 0)
 
 ---
 
-### List — `notifications:{userId}` (Bonus)
+### List - `notifications:{userId}` (Bonus)
 
 Eléments : JSON string par notification (type, message, timestamp)
 Ordre : chronologique (RPUSH = ajout en queue)
@@ -103,7 +103,7 @@ Ordre : chronologique (RPUSH = ajout en queue)
 
 ---
 
-### Set — `user:{userId}:tags` (Bonus)
+### Set - `user:{userId}:tags` (Bonus)
 
 Membres : chaînes de tags (`"premium"`, `"eco-friendly"`, `"top-driver"`)
 

@@ -9,7 +9,7 @@ Dans l'architecture polyglotte CityFlow, Cassandra est utilisée pour les donné
 - logs de connexions ou d'actions utilisateur ;
 - statistiques journalières des passages.
 
-Cassandra est choisie parce qu'elle est adaptée aux écritures massives, aux données time-series et à la scalabilité horizontale.
+Cassandra est choisie parce qu'elle est adaptée aux écritures massives, aux données time-series et à la scalabilité horizontale. Les besoins métier qui justifient ce choix sont portés par trois profils distincts : *l'analyste* qui veut retrouver l'historique d'une station, *le système* qui doit absorber des milliers d'événements par minute, et *l'utilisateur* qui consulte ses propres connexions.
 
 ## 2. Pourquoi Cassandra ?
 
@@ -29,12 +29,11 @@ Neo4j est idéal pour le réseau de transport, les relations entre stations et l
 
 Cassandra est adaptée car elle offre :
 
-- écriture très rapide ;
-- modèle time-series efficace ;
-- partitionnement horizontal ;
-- réplication native ;
-- haute disponibilité ;
-- absence de point unique de défaillance dans un vrai cluster.
+- **écriture très rapide** - *en tant que système, enregistrer plusieurs milliers d'événements de passage par minute (US-C2) sans dégradation des performances ;*
+- **modèle time-series efficace** - *en tant qu'analyste, retrouver l'historique d'une station sur une période donnée (US-C1) en une lecture par partition ;*
+- **partitionnement horizontal** - les données d'une station pour un jour sont isolées sur un nœud, les requêtes ne scannent jamais l'intégralité de la base ;
+- **réplication native** - haute disponibilité sans point unique de défaillance dans un vrai cluster ;
+- **colonnes COUNTER** - *en tant qu'analyste consultant l'évolution journalière des passages (US-C4), les compteurs sont maintenus à l'écriture, pas recalculés à la lecture.*
 
 ## 3. Keyspace
 
@@ -90,7 +89,7 @@ CREATE TABLE station_passages (
 
 ### Objectif
 
-Répondre à US-C1 : retrouver l'historique des passages d'une station spécifique sur une période donnée.
+*En tant qu'analyste*, retrouver l'historique des passages d'une station spécifique sur une période donnée (US-C1), sans scanner l'ensemble de la base.
 
 ### Choix de clé
 
@@ -136,7 +135,7 @@ CREATE TABLE user_connexions (
 
 ### Objectif
 
-Répondre à US-C3 : consulter les connexions ou actions d'un utilisateur sur les 30 derniers jours.
+*En tant qu'utilisateur*, consulter mes propres connexions et actions sur les 30 derniers jours (US-C3 - audit personnel), sans toucher aux données des autres utilisateurs.
 
 ### Choix de clé
 
@@ -163,11 +162,11 @@ CREATE TABLE daily_station_stats (
 
 ### Objectif
 
-Répondre à US-C4 : obtenir l'évolution journalière du nombre de passages.
+*En tant qu'analyste*, obtenir l'évolution journalière du nombre de passages pour identifier les pics d'affluence (US-C4), sans déclencher un scan complet de `station_passages`.
 
 ### Pourquoi des compteurs ?
 
-Cassandra n'est pas conçue pour faire des agrégations globales à la volée sur des millions de lignes. On prépare donc les statistiques à l'écriture.
+Cassandra n'est pas conçue pour faire des agrégations globales à la volée sur des millions de lignes. *En tant que système*, on prépare donc les statistiques à l'écriture : chaque événement incrémente directement les COUNTER, et l'analyste lit un résultat pré-calculé.
 
 Les colonnes `COUNTER` permettent d'incrémenter directement :
 
@@ -177,7 +176,7 @@ Les colonnes `COUNTER` permettent d'incrémenter directement :
 
 ## 9. Réponse à US-C2 : écritures massives
 
-Le modèle supporte l'enregistrement massif d'événements parce que :
+*En tant que système*, le modèle supporte l'enregistrement de plusieurs milliers d'événements de passage par minute parce que :
 
 - les écritures sont append-only ;
 - il n'y a pas de jointure ;

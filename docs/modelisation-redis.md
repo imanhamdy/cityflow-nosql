@@ -4,11 +4,11 @@
 
 Redis est choisi pour les données **temps réel et performance** de CityFlow pour trois raisons fondamentales :
 
-1. **Latence sub-milliseconde** - la disponibilité des stations doit s'afficher en moins de 10 ms. Une requête MongoDB prendrait 20-50 ms, inacceptable pour une carte en temps réel mise à jour toutes les secondes.
-2. **Expiration automatique (TTL)** - les disponibilités de stations, les sessions et les compteurs de rate limiting ont naturellement une durée de vie limitée. Redis gère cela nativement avec `EXPIRE`, sans job de nettoyage à écrire ni colonne `expires_at` à maintenir.
-3. **Structures spécialisées** - un Sorted Set est la structure parfaite pour un classement : `ZREVRANGE` renvoie le top 10 en O(log N + K). En SQL, cela nécessiterait `SELECT userId, COUNT(*) ... ORDER BY ... LIMIT 10` avec un scan de table à chaque appel.
+1. **Latence sub-milliseconde** - *En tant qu'utilisateur, je dois voir combien de vélos sont disponibles à la station X en temps réel (US-R1).* Une requête MongoDB prendrait 20-50 ms, inacceptable pour une carte mise à jour toutes les secondes. Redis répond en moins de 1 ms.
+2. **Expiration automatique (TTL)** - *En tant qu'utilisateur, ma session doit rester active 30 minutes après ma dernière action, sans que j'aie à me reconnecter (US-R2).* Redis gère cela nativement avec `EXPIRE`, sans job de nettoyage à écrire ni colonne `expires_at` à maintenir.
+3. **Structures spécialisées** - *En tant qu'utilisateur, je veux consulter le classement des 10 conducteurs les plus actifs du mois (US-R3).* Un Sorted Set maintient le tri automatiquement : `ZREVRANGE` renvoie le top 10 en O(log N + K), sans scan de table.
 
-**Coût d'une approche SQL :** gérer le rate limiting avec une table `api_calls(userId, minute, count)` exige des transactions et des locks pour éviter les race conditions sur `UPDATE`. Redis gère l'atomicité de `INCR` nativement - pas de lock nécessaire.
+**Coût d'une approche SQL :** *En tant que développeur*, gérer le rate limiting (US-R4) avec une table `api_calls(userId, minute, count)` exige des transactions et des locks pour éviter les race conditions sur `UPDATE`. Redis gère l'atomicité de `INCR` nativement - pas de lock nécessaire, pas de deadlock possible sous forte charge.
 
 ---
 
@@ -51,7 +51,7 @@ scooters    3
 capacity    20
 ```
 
-**Pourquoi Hash ?** Chaque station est une entité avec plusieurs propriétés. Le Hash permet de lire un seul champ (`HGET station:S001:availability bikes`) ou tous (`HGETALL`) sans désérialiser un JSON. C'est plus efficace qu'un String JSON pour des accès partiels fréquents.
+**Pourquoi Hash ?** *En tant qu'utilisateur consultant la carte en temps réel*, je n'ai besoin que du champ `bikes` à un instant donné. Le Hash permet de lire un seul champ (`HGET station:S001:availability bikes`) sans désérialiser un objet JSON complet. C'est plus efficace qu'un String JSON pour des accès partiels fréquents.
 
 **TTL 60s (production) :** Les capteurs IoT actualisent la disponibilité toutes les minutes. Une valeur expirée (cache miss) déclenche une requête vers la source de vérité (MongoDB) et une réinsertion dans Redis.
 
@@ -70,7 +70,7 @@ createdAt    "2025-06-21T08:30:00Z"
 lastAction   "2025-06-21T09:00:00Z"
 ```
 
-**Pourquoi Hash ?** La session regroupe plusieurs champs lus ensemble à chaque requête HTTP. Le TTL sliding (renouvelé à chaque `EXPIRE` sur action) correspond exactement au comportement "session inactive depuis 30 min = expirée" demandé par US-R2.
+**Pourquoi Hash ?** *En tant qu'utilisateur*, ma session regroupe plusieurs champs (identité, rôle, dernière action) lus ensemble à chaque requête HTTP. Le TTL sliding (renouvelé à chaque `EXPIRE` sur action) correspond exactement au comportement "session inactive depuis 30 min = expirée" demandé par US-R2.
 
 ---
 
@@ -79,7 +79,7 @@ lastAction   "2025-06-21T09:00:00Z"
 Membres : `userId` (ex. `u001`, `u003`)
 Score : nombre de trajets du mois
 
-**Pourquoi Sorted Set ?** C'est la structure native pour un classement ordonné. Le tri est maintenu automatiquement à chaque `ZADD`/`ZINCRBY`. `ZREVRANGE 0 9` retourne le top 10 en une commande, en O(log N + K).
+**Pourquoi Sorted Set ?** *En tant qu'utilisateur consultant le classement (US-R3)*, le tri est maintenu automatiquement à chaque `ZADD`/`ZINCRBY`. `ZREVRANGE 0 9` retourne le top 10 en une commande, en O(log N + K), sans recalcul.
 
 **Clé mensuelle :** en fin de mois, la couche applicative crée une nouvelle clé `leaderboard:monthly:2025-07` et archive ou supprime l'ancienne. Aucun `UPDATE` SQL complexe.
 
@@ -90,7 +90,7 @@ Score : nombre de trajets du mois
 Valeur : entier (nombre de requêtes dans la minute courante)
 TTL : 60s (expire naturellement à la fin de la minute, la clé repart à 0)
 
-**Pourquoi String ?** `INCR` est atomique : même sous charge concurrente, deux requêtes simultanées n'incrémentent jamais le même compteur de façon incorrecte. Impossible à garantir aussi simplement avec une table SQL sans transaction explicite.
+**Pourquoi String ?** *En tant que développeur implémentant le rate limiting (US-R4)*, `INCR` est atomique : même sous charge concurrente, deux requêtes simultanées n'incrémentent jamais le même compteur de façon incorrecte. Impossible à garantir aussi simplement avec une table SQL sans transaction explicite et risque de deadlock.
 
 ---
 

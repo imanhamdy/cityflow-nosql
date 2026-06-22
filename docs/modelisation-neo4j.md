@@ -6,6 +6,10 @@ Neo4j stocke le **réseau de transport** de la métropole lyonnaise. C'est la ba
 idéale pour les relations complexes entre stations, les calculs de chemin et la détection de
 nœuds centraux (hubs).
 
+Les besoins métier qui justifient Neo4j sont portés par deux profils :
+- *En tant qu'utilisateur*, je veux calculer le plus court chemin entre deux stations (US-N1), trouver les stations accessibles en moins de 15 minutes (US-N2) et savoir s'il existe un trajet sans correspondance (US-N4). Ces requêtes de traversée sont natives en Cypher, impossibles à écrire simplement en SQL.
+- *En tant que planificateur*, je veux identifier les stations hubs (US-N3) pour optimiser les connexions du réseau.
+
 Les autres bases ne peuvent pas couvrir ce besoin :
 - MongoDB : orienté document, pas de traversée de graphe
 - Redis : mémoire vive, pas adapté aux algorithmes de chemin
@@ -36,15 +40,13 @@ est un réseau de métro homogène. Le label unique simplifie toutes les requêt
 
 #### Pourquoi `:CONNECTED_TO` bidirectionnel ?
 
-Les relations `:CONNECTED_TO` sont créées dans les deux sens (`A→B` et `B→A`). Cela permet
-d'utiliser des patterns dirigés simples dans les requêtes (`-[:CONNECTED_TO*]->`) sans
-perdre la capacité de parcourir le graphe dans les deux sens.
+Les relations `:CONNECTED_TO` sont créées dans les deux sens (`A→B` et `B→A`). *En tant qu'utilisateur planifiant un trajet dans n'importe quel sens*, cela permet d'utiliser des patterns dirigés simples dans les requêtes (`-[:CONNECTED_TO*]->`) sans perdre la capacité de parcourir le graphe dans les deux sens.
 
 #### Pourquoi `:SERVES` plutôt qu'un nœud `:LineSegment` ?
 
 Un nœud `:LineSegment` aurait permis de représenter l'ordre des stations sur une ligne comme
 un chemin de nœuds. Mais il aurait compliqué les requêtes sans apporter de bénéfice pour
-nos 4 user stories. La propriété `order` sur `:SERVES` est suffisante.
+nos 4 user stories. *En tant qu'utilisateur cherchant un trajet sans correspondance (US-N4)*, la propriété `order` sur `:SERVES` est suffisante pour identifier qu'une même ligne dessert deux stations.
 
 ## 3. Contraintes d'unicité
 

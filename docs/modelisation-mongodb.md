@@ -4,9 +4,10 @@
 
 MongoDB est choisi pour les **données métier riches** : profils utilisateurs, trajets multimodaux et véhicules disponibles. Ces données ont trois propriétés qui font de MongoDB le choix naturel :
 
-1. **Schémas flexibles et évolutifs** - un trajet contient un nombre variable d'étapes (1 à n modes de transport), une voiture a des propriétés différentes d'un vélo (plaque, places, etc.). MongoDB gère nativement cette variabilité sans ALTER TABLE.
-2. **Documents imbriqués** - les étapes d'un trajet sont toujours lues avec le trajet lui-même. L'embedding évite les jointures coûteuses.
-3. **Requêtes ad-hoc** - les analystes interrogent les données selon des critères variés (par jour, par arrondissement, par type de véhicule). MongoDB excelle pour ces requêtes exploratoires.
+1. **Schémas flexibles et évolutifs** - un trajet contient un nombre variable d'étapes (1 à n modes de transport), une voiture a des propriétés différentes d'un vélo (plaque, places, etc.). MongoDB gère nativement cette variabilité sans ALTER TABLE. *En tant qu'utilisateur, mon profil et mes trajets ont des structures hétérogènes que MongoDB absorbe sans contrainte de schéma.*
+2. **Documents imbriqués** - les étapes d'un trajet sont toujours lues avec le trajet lui-même. L'embedding évite les jointures coûteuses. *En tant qu'utilisateur consultant mon historique (US-M1), tout est accessible en une seule lecture.*
+3. **Requêtes ad-hoc** - *En tant qu'analyste, j'interroge les données selon des critères variés (par jour, par arrondissement, par type de véhicule) sans avoir à anticiper chaque requête dans le schéma.* MongoDB excelle pour ces requêtes exploratoires (US-M3).
+4. **Index full-text natif** - *En tant que développeur, j'active la recherche sur les commentaires (US-M4) avec un simple index `text`, sans déployer une infrastructure externe comme Elasticsearch.*
 
 ---
 
@@ -54,7 +55,7 @@ MongoDB est choisi pour les **données métier riches** : profils utilisateurs, 
 ```
 
 **Choix de modélisation :**
-- Collection indépendante (pas embeddée dans `users`) - un véhicule existe indépendamment de tout trajet, est partagé entre plusieurs utilisateurs, et est interrogé seul (US-M2 : liste par type + arrondissement).
+- Collection indépendante (pas embeddée dans `users`) - un véhicule existe indépendamment de tout trajet, est partagé entre plusieurs utilisateurs, et est interrogé seul. *En tant qu'administrateur, je filtre les véhicules par type et arrondissement (US-M2) directement sur cette collection sans jointure.*
 - `district` et `station` sont des strings plutôt que des références - les arrondissements/stations ne changent pas, il n'y a pas de collection `stations` à maintenir en cohérence (c'est Neo4j qui gère le graphe des stations).
 - Pas de `lastUserId` : la gestion des réservations temps réel est confiée à Redis, pas MongoDB.
 
@@ -108,4 +109,4 @@ MongoDB est choisi pour les **données métier riches** : profils utilisateurs, 
 
 ## Coût d'une base relationnelle unique
 
-Avec PostgreSQL à la place de MongoDB, les `steps[]` exigeraient une table `trip_steps(trip_id, seq, mode, from, to, duration)` avec JOIN systématique. Les `preferences{}` nécessiteraient soit du JSON hétérogène, soit plusieurs colonnes nullables, rendant les migrations de schéma complexes. La recherche full-text sur `comment` serait faisable, mais moins intégrée que l'index `text` natif de MongoDB.
+*En tant que développeur*, avec PostgreSQL à la place de MongoDB, les `steps[]` exigeraient une table `trip_steps(trip_id, seq, mode, from, to, duration)` avec JOIN systématique à chaque lecture de trajet. Les `preferences{}` nécessiteraient soit du JSON hétérogène, soit plusieurs colonnes nullables, rendant les migrations de schéma complexes. La recherche full-text sur `comment` serait faisable, mais moins intégrée que l'index `text` natif de MongoDB. *En tant qu'analyste*, chaque nouvelle dimension d'analyse (arrondissement, type de véhicule, eco-score) imposerait une migration de schéma SQL, là où MongoDB accepte de nouveaux champs sans interruption de service.

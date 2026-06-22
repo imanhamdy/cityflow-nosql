@@ -7,20 +7,37 @@ stocké dans la base de données la mieux adaptée à ses contraintes d'accès, 
 structure. Quatre bases NoSQL cohabitent, orchestrées par Docker Compose.
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                      Application CityFlow                       │
-│                   (couche applicative - hors périmètre)         │
-└───────┬───────────────┬──────────────────┬──────────────────────┘
-        │               │                  │                  │
-        ▼               ▼                  ▼                  ▼
-  ┌──────────┐   ┌──────────┐   ┌─────────────┐   ┌──────────────┐
-  │ MongoDB  │   │  Redis   │   │  Cassandra  │   │    Neo4j     │
-  │  :27017  │   │  :6379   │   │    :9042    │   │  :7687/:7474 │
-  │          │   │          │   │             │   │              │
-  │ Profils  │   │  Cache   │   │   Logs de   │   │   Réseau de  │
-  │ Trajets  │   │Sessions  │   │  passages   │   │   transport  │
-  │Véhicules │   │Leaderbd. │   │(time-series)│   │  (graphe)    │
-  └──────────┘   └──────────┘   └─────────────┘   └──────────────┘
+                       ARCHITECTURE CITYFLOW - VUE D'ENSEMBLE
+               ─────────────────────────────────────────────────────
+
+  Acteurs :
+  Utilisateur · Administrateur · Analyste · Developpeur · Planificateur · Systeme
+                                          |
+                            ┌─────────────┴──────────────┐
+                            │      APPLICATION CITYFLOW    │
+                            │  Planification · Reservation │
+                            │    Suivi · Multimodal Lyon   │
+                            └──┬──────────┬───────────┬───┘
+                               |          |           |    \
+               ┌───────────────┘    ┌─────┘     ┌────┘     └────────────────┐
+               |                    |            |                           |
+       ┌───────┴────────┐  ┌────────┴────┐  ┌───┴─────────┐  ┌─────────────┴──┐
+       │    MONGODB     │  │    REDIS    │  │  CASSANDRA  │  │     NEO4J      │
+       │    :27017      │  │    :6379    │  │    :9042    │  │  :7687 / :7474 │
+       ├────────────────┤  ├─────────────┤  ├─────────────┤  ├────────────────┤
+       │ users          │  │ station:    │  │ station_    │  │ (:Station)     │
+       │ trips          │  │  avail.     │  │   passages  │  │ (:Line)        │
+       │ vehicles       │  │ session:    │  │ user_       │  │ [:CONNECTED_TO]│
+       │                │  │  token      │  │  connexions │  │ [:SERVES]      │
+       │                │  │ leaderboard │  │ daily_stats │  │                │
+       │                │  │ ratelimit   │  │             │  │                │
+       ├────────────────┤  ├─────────────┤  ├─────────────┤  ├────────────────┤
+       │ Schema flexible│  │  < 1 ms     │  │  Ecritures  │  │ shortestPath   │
+       │ Embed + Aggreg.│  │  TTL natif  │  │  massives   │  │ Traversees     │
+       │ Full-text index│  │  Rate limit │  │  Partitions │  │ Graphe Lyon    │
+       ├────────────────┤  ├─────────────┤  ├─────────────┤  ├────────────────┤
+       │  M1 M2 M3 M4   │  │ R1 R2 R3 R4 │  │ C1 C2 C3 C4 │  │  N1 N2 N3 N4  │
+       └────────────────┘  └─────────────┘  └─────────────┘  └────────────────┘
 ```
 
 ```mermaid

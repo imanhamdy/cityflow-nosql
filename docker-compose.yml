@@ -90,9 +90,66 @@ services:
     networks:
       - cityflow-net
 
+  cassandra:
+    image: cassandra:4.1
+    container_name: cityflow-cassandra
+    restart: unless-stopped
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    environment:
+      CASSANDRA_CLUSTER_NAME: "CityFlow"
+      CASSANDRA_DC: "dc1"
+      CASSANDRA_ENDPOINT_SNITCH: "GossipingPropertyFileSnitch"
+      MAX_HEAP_SIZE: "512M"
+      HEAP_NEWSIZE: "128M"
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe cluster'"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    networks:
+      - cityflow-net
+
+  cassandra-seed:
+    image: cassandra:4.1
+    container_name: cityflow-cassandra-seed
+    restart: "no"
+    volumes:
+      - ./seed/cassandra/init.cql:/init.cql:ro
+    command: >
+      sh -c "until cqlsh cassandra 9042 -e 'describe cluster' > /dev/null 2>&1;
+             do echo 'Waiting for Cassandra...'; sleep 5; done
+             && cqlsh cassandra 9042 -f /init.cql
+             && echo 'Cassandra seed complete'"
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    networks:
+      - cityflow-net
+
+  cassandra-web:
+    image: ipushc/cassandra-web
+    container_name: cityflow-cassandra-web
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    environment:
+      CASSANDRA_HOST_IP: cassandra
+      CASSANDRA_PORT: 9042
+      HOST_PORT: ":8083"
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    networks:
+      - cityflow-net
+
 volumes:
   mongo_data:
   redis_data:
+  cassandra_data:
 
 networks:
   cityflow-net:

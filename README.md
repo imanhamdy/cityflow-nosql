@@ -1,56 +1,30 @@
-﻿# CityFlow - Plateforme de mobilité urbaine polyglotte
+# CityFlow - Plateforme de mobilité urbaine polyglotte
 
 Projet fil rouge du module **NoSQL B3** - Ynov Campus Lyon 2025/2026.
 
-CityFlow est une plateforme fictive de mobilité urbaine multimodale pour la métropole de Lyon (covoiturage, transports en commun, vélos en libre-service). Ce dépôt contient l'architecture de persistance polyglotte : MongoDB, Redis, Cassandra et Neo4j, orchestrés via Docker Compose.
+CityFlow est une plateforme fictive de mobilité urbaine multimodale pour la métropole de
+Lyon (covoiturage, transports en commun, vélos en libre-service). Ce dépôt démontre une
+architecture de persistance polyglotte avec MongoDB, Redis, Cassandra et Neo4j, chaque
+base choisie pour le besoin qu'elle couvre le mieux.
+
+**Auteur :** Iman Hamdy - Ynov Campus Lyon, B3 INFO 2025/2026
 
 ---
 
-## Schema global
+## Architecture
 
-```
-                       ARCHITECTURE CITYFLOW - VUE D'ENSEMBLE
-               ─────────────────────────────────────────────────────
+| Base | Données | Pourquoi |
+|------|---------|----------|
+| **MongoDB** | Profils, trajets, véhicules | Schéma flexible, documents imbriqués, agrégation |
+| **Redis** | Disponibilités, sessions, leaderboard | Latence < 1 ms, TTL natif, Sorted Set |
+| **Cassandra** | Historique des passages, logs | Écritures massives, time-series, partitions |
+| **Neo4j** | Stations, lignes, connexions | Graphe natif, shortestPath, Dijkstra |
 
-  Acteurs :
-  Utilisateur · Administrateur · Analyste · Developpeur · Planificateur · Systeme
-                                          |
-                            ┌─────────────┴──────────────┐
-                            │      APPLICATION CITYFLOW    │
-                            │  Planification · Reservation │
-                            │    Suivi · Multimodal Lyon   │
-                            └──┬──────────┬───────────┬───┘
-                               |          |           |    \
-               ┌───────────────┘    ┌─────┘     ┌────┘     └────────────────┐
-               |                    |            |                           |
-       ┌───────┴────────┐  ┌────────┴────┐  ┌───┴─────────┐  ┌─────────────┴──┐
-       │    MONGODB     │  │    REDIS    │  │  CASSANDRA  │  │     NEO4J      │
-       │    :27017      │  │    :6379    │  │    :9042    │  │  :7687 / :7474 │
-       ├────────────────┤  ├─────────────┤  ├─────────────┤  ├────────────────┤
-       │ users          │  │ station:    │  │ station_    │  │ (:Station)     │
-       │ trips          │  │  avail.     │  │   passages  │  │ (:Line)        │
-       │ vehicles       │  │ session:    │  │ user_       │  │ [:CONNECTED_TO]│
-       │                │  │  token      │  │  connexions │  │ [:SERVES]      │
-       │                │  │ leaderboard │  │ daily_stats │  │                │
-       │                │  │ ratelimit   │  │             │  │                │
-       ├────────────────┤  ├─────────────┤  ├─────────────┤  ├────────────────┤
-       │ Schema flexible│  │  < 1 ms     │  │  Ecritures  │  │ shortestPath   │
-       │ Embed + Aggreg.│  │  TTL natif  │  │  massives   │  │ Traversees     │
-       │ Full-text index│  │  Rate limit │  │  Partitions │  │ Graphe Lyon    │
-       ├────────────────┤  ├─────────────┤  ├─────────────┤  ├────────────────┤
-       │  M1 M2 M3 M4   │  │ R1 R2 R3 R4 │  │ C1 C2 C3 C4 │  │  N1 N2 N3 N4  │
-       └────────────────┘  └─────────────┘  └─────────────┘  └────────────────┘
-```
+Justification detaillee : [docs/architecture.md](docs/architecture.md)
 
 ---
 
-## Auteur
-
-**Iman Hamdy** - Ynov Campus Lyon, B3 INFO 2025/2026
-
----
-
-## Lancement en une commande
+## Lancement
 
 ```bash
 cp .env.example .env
@@ -59,21 +33,20 @@ docker compose up -d
 
 Toutes les bases sont peuplées automatiquement au premier démarrage.
 
-### Interfaces disponibles
+### Interfaces
 
 | Interface | URL | Identifiants |
 |-----------|-----|--------------|
-| Mongo Express (MongoDB) | http://localhost:8081 | student / nosql2025 |
+| Mongo Express | http://localhost:8081 | student / nosql2025 |
 | Redis Commander | http://localhost:8082 | student / nosql2025 |
 | Cassandra Web | http://localhost:8083 | - |
 | Neo4j Browser | http://localhost:7474 | neo4j / cityflow2025 |
 
-### Connexion directe aux bases
+### Connexion directe
 
 ```bash
 # MongoDB
 docker exec -it cityflow-mongo mongosh -u admin -p cityflow2025 --authenticationDatabase admin
-use cityflow
 
 # Redis
 docker exec -it cityflow-redis redis-cli -a cityflow2025
@@ -81,74 +54,34 @@ docker exec -it cityflow-redis redis-cli -a cityflow2025
 # Cassandra
 docker exec -it cityflow-cassandra cqlsh -u cassandra -p cassandra
 
-# Neo4j
-# Via le navigateur : http://localhost:7474
+# Neo4j - via http://localhost:7474
 ```
 
 ---
 
-## Architecture - répartition des données
+## Documentation
 
-| Base | Données stockées | Justification |
-|------|-----------------|---------------|
-| **MongoDB** | Profils utilisateurs, trajets effectués, véhicules disponibles | Schémas flexibles, documents imbriqués (étapes d'un trajet), requêtes ad-hoc fréquentes |
-| **Redis** | Disponibilités des stations, sessions, leaderboard | Latence sub-milliseconde, expiration automatique, sorted sets |
-| **Cassandra** | Historique des passages aux stations, logs de connexions | Volume massif d'écritures, time-series, scalabilité horizontale |
-| **Neo4j** | Réseau de transport (stations, lignes, connexions) | Modèle graphe naturel, calcul de plus court chemin |
-
----
-
-## Structure du dépôt
-
-```
-cityflow-nosql/
-├── docker-compose.yml          # Orchestration des 4 bases
-├── .env.example                # Variables d'environnement type
-├── docs/
-│   ├── architecture.md         # Schéma global et justifications
-│   ├── modelisation-mongodb.md
-│   ├── modelisation-redis.md
-│   ├── modelisation-cassandra.md
-│   └── modelisation-neo4j.md
-├── seed/
-│   ├── mongodb/init.js         # 20 users, 20 vehicles, 30 trips
-│   ├── redis/init.sh
-│   ├── cassandra/init.cql
-│   └── neo4j/init.cypher
-└── queries/
-    ├── mongodb-queries.md      # US-M1 à US-M4
-    ├── redis-queries.md        # US-R1 à US-R4
-    ├── cassandra-queries.md    # US-C1 à US-C4
-    └── neo4j-queries.md        # US-N1 à US-N4
-```
+- [Guide de démo](DEMO.md) - lancement pas à pas, une requête par base
+- [Architecture globale](docs/architecture.md) - schéma Mermaid, justifications polyglotte
+- [Modélisation MongoDB](docs/modelisation-mongodb.md)
+- [Modélisation Redis](docs/modelisation-redis.md)
+- [Modélisation Cassandra](docs/modelisation-cassandra.md)
+- [Modélisation Neo4j](docs/modelisation-neo4j.md)
 
 ---
 
 ## Données de seed
 
-Chaque base est peuplée automatiquement au démarrage :
-
 | Base | Volume |
 |------|--------|
-| MongoDB | ~20 utilisateurs, ~20 véhicules, ~30 trajets avec commentaires |
-| Redis | Disponibilités de 10 stations, 5 sessions, 1 leaderboard, compteurs de rate limiting |
-| Cassandra | 200 événements horodatés sur 7 jours, 3 tables (passages, connexions, stats COUNTER) |
-| Neo4j | 15 stations lyonnaises, 4 lignes (A/B/C/D), 34 relations `:CONNECTED_TO`, 27 dessertes `:SERVES` |
+| MongoDB | 20 utilisateurs, 20 véhicules, 30 trajets avec commentaires |
+| Redis | 10 stations, 5 sessions, 1 leaderboard, compteurs rate limiting |
+| Cassandra | 200 événements sur 7 jours, 3 tables (passages, connexions, COUNTER) |
+| Neo4j | 15 stations lyonnaises, 4 lignes (A/B/C/D), 34 connexions, 27 dessertes |
 
 ---
 
-## Documentation et démonstration
-
-- [Guide de démo](DEMO.md) - lancement pas à pas + une requête par base, copy-pasteable
-- [Architecture globale](docs/architecture.md) - schéma Mermaid, justifications polyglotte
-- [Modélisation MongoDB](docs/modelisation-mongodb.md) - collections, embed vs. référence, index
-- [Modélisation Redis](docs/modelisation-redis.md) - clés, structures, naming convention
-- [Modélisation Cassandra](docs/modelisation-cassandra.md) - tables, partition keys, clustering columns
-- [Modélisation Neo4j](docs/modelisation-neo4j.md) - nœuds, relations, propriétés
-
----
-
-## User stories couvertes
+## User stories
 
 | ID | Description | Base |
 |----|-------------|------|
@@ -171,14 +104,50 @@ Chaque base est peuplée automatiquement au démarrage :
 
 ---
 
-## Pourquoi pas un seul SGBD relationnel ?
+## Structure du dépôt
 
-Une base SQL unique aurait pu tout stocker, mais au prix de :
+```
+cityflow-nosql/
+├── docker-compose.yml
+├── .env.example
+├── docs/
+│   ├── architecture.md
+│   ├── modelisation-mongodb.md
+│   ├── modelisation-redis.md
+│   ├── modelisation-cassandra.md
+│   └── modelisation-neo4j.md
+├── seed/
+│   ├── mongodb/init.js
+│   ├── redis/init.sh
+│   ├── cassandra/init.cql
+│   └── neo4j/init.cypher
+└── queries/
+    ├── mongodb-queries.md      # US-M1 à US-M4
+    ├── redis-queries.md        # US-R1 à US-R4
+    ├── cassandra-queries.md    # US-C1 à US-C4
+    └── neo4j-queries.md        # US-N1 à US-N4
+```
 
-- **Schémas rigides** pour les trajets multi-étapes imbriqués (sans JSONB natif)
-- **Performances dégradées** pour les time-series (pas de partition par date native)
-- **Absence de primitives graphe** (le plus court chemin en SQL = procédures stockées)
-- **Latence incompatible** avec les besoins temps réel des disponibilités de stations
+---
 
-Le surcoût opérationnel des 4 bases est justifié par les gains fonctionnels et de performance.
-Voir [docs/architecture.md](docs/architecture.md) pour la justification détaillée.
+## FAQ
+
+**Pourquoi MongoDB et pas Cassandra pour les trajets ?**
+Les trajets sont des documents riches avec des données imbriquées et des schémas flexibles.
+MongoDB gère cela naturellement et supporte l'agrégation et la recherche full-text.
+
+**Pourquoi Redis et pas MongoDB pour les sessions ?**
+Redis fournit un stockage en mémoire avec expiration TTL native et des temps d'accès
+sub-milliseconde.
+
+**Pourquoi Cassandra et pas MongoDB pour l'historique des stations ?**
+Cassandra est optimisée pour les écritures massives en time-series et la scalabilité
+horizontale.
+
+**Pourquoi Neo4j et pas MongoDB pour les calculs d'itinéraires ?**
+Les réseaux de transport sont des graphes. Neo4j fournit des algorithmes de plus court
+chemin et de traversée nativement.
+
+**Quel est l'inconvénient de la persistance polyglotte ?**
+Plus de complexité opérationnelle, plus de technologies à maintenir, et une gestion de
+la cohérence des données plus difficile.

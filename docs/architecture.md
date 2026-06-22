@@ -132,7 +132,16 @@ relations `:CONNECTED_TO` (durée en minutes), relations `:SERVES` (ordre sur la
 - Données volumétriques séquentielles → Cassandra
 - Documents riches non-relationnels → MongoDB
 
-## 3. Interactions entre bases
+## 3. Synthèse - Analyse des besoins et sélection des moteurs
+
+| Besoin | Base choisie | Justification |
+|--------|-------------|---------------|
+| Temps réel | Redis | Accès mémoire très rapide |
+| Données métier | MongoDB | Structure flexible |
+| Historique volumineux | Cassandra | Écriture distribuée |
+| Relations / itinéraires | Neo4j | Parcours de graphes optimisé |
+
+## 4. Interactions entre bases
 
 Dans une application réelle, les bases communiquent via la couche service :
 
@@ -146,7 +155,7 @@ Requête utilisateur « Planifier un trajet »
 
 Pour ce projet, chaque base est interrogée indépendamment via ses propres scripts et requêtes.
 
-## 4. Pourquoi ne pas utiliser une seule base relationnelle ?
+## 5. Pourquoi ne pas utiliser une seule base relationnelle ?
 
 Une base relationnelle pourrait stocker l'ensemble des données CityFlow, mais cela
 introduirait plusieurs limites :
@@ -159,7 +168,7 @@ introduirait plusieurs limites :
 L'approche polyglotte permet donc d'utiliser la technologie la plus adaptée à chaque
 besoin métier au prix d'une complexité opérationnelle plus élevée.
 
-## 5. Limites de l'architecture polyglotte
+## 6. Limites de l'architecture polyglotte
 
 Cette architecture présente plusieurs avantages mais aussi des contraintes :
 

@@ -30,8 +30,48 @@ services:
     networks:
       - cityflow-net
 
+  neo4j:
+    image: neo4j:5-community
+    container_name: cityflow-neo4j
+    restart: unless-stopped
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j_data:/data
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:-cityflow2025}
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_dbms_security_procedures_unrestricted: apoc.*
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p ${NEO4J_PASSWORD:-cityflow2025} 'RETURN 1' --non-interactive"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    networks:
+      - cityflow-net
+
+  neo4j-seed:
+    image: neo4j:5-community
+    container_name: cityflow-neo4j-seed
+    restart: "no"
+    volumes:
+      - ./seed/neo4j/init.cypher:/init.cypher:ro
+    command: >
+      sh -c "until cypher-shell -a bolt://neo4j:7687 -u neo4j -p ${NEO4J_PASSWORD:-cityflow2025} 'RETURN 1' > /dev/null 2>&1;
+             do echo 'Waiting for Neo4j...'; sleep 5; done
+             && cypher-shell -a bolt://neo4j:7687 -u neo4j -p ${NEO4J_PASSWORD:-cityflow2025} -f /init.cypher
+             && echo 'Neo4j seed complete'"
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    networks:
+      - cityflow-net
+
 volumes:
   mongo_data:
+  neo4j_data:
 
 networks:
   cityflow-net:
